@@ -191,48 +191,59 @@ class ForecastService:
             h = horizon or self.conf['horizon']
             logger.info(f"Generando predicciones con horizonte h={h}")
             
-            # StatsForecast.predict() retorna un DataFrame con MultiIndex o columnas específicas
+            # StatsForecast.predict() retorna un DataFrame
             Y_hat = self.sf.predict(h=h)
             
             # Asegurar que tenemos las columnas correctas
             if Y_hat is None or len(Y_hat) == 0:
                 raise ValueError("StatsForecast no retornó predicciones")
             
-            # Resetear índice si es necesario
-            if isinstance(Y_hat.index, pd.MultiIndex):
-                Y_hat = Y_hat.reset_index()
-            elif 'unique_id' not in Y_hat.columns or 'ds' not in Y_hat.columns:
-                # Si no tiene las columnas esperadas, intentar resetear
-                Y_hat = Y_hat.reset_index()
+            logger.info(f"Formato inicial de Y_hat: index={type(Y_hat.index)}, columns={list(Y_hat.columns)}")
             
-            # Asegurar que unique_id y ds sean columnas (no índices)
+            # Siempre resetear el índice para asegurar que tenemos columnas
+            # StatsForecast puede retornar MultiIndex con unique_id y ds
+            Y_hat = Y_hat.reset_index()
+            
+            logger.info(f"Después de reset_index: columns={list(Y_hat.columns)}")
+            
+            # Verificar que tenemos unique_id y ds
             if 'unique_id' not in Y_hat.columns:
-                # Si unique_id está en el índice, moverlo a columna
-                if 'unique_id' in Y_hat.index.names:
+                # Buscar en el índice
+                if hasattr(Y_hat.index, 'names') and 'unique_id' in Y_hat.index.names:
                     Y_hat = Y_hat.reset_index(level='unique_id')
                 else:
-                    raise ValueError("No se pudo encontrar 'unique_id' en las predicciones")
+                    # Si no está, puede que StatsForecast use otro nombre
+                    # Buscar columnas que puedan ser el identificador
+                    possible_id_cols = [c for c in Y_hat.columns if 'id' in c.lower() or c == 'series_id']
+                    if possible_id_cols:
+                        Y_hat = Y_hat.rename(columns={possible_id_cols[0]: 'unique_id'})
+                    else:
+                        raise ValueError(f"No se pudo encontrar 'unique_id' en las predicciones. Columnas: {list(Y_hat.columns)}")
             
             if 'ds' not in Y_hat.columns:
-                # Si ds está en el índice, moverlo a columna
-                if 'ds' in Y_hat.index.names:
-                    Y_hat = Y_hat.reset_index(level='ds')
+                # Buscar columnas de fecha
+                possible_date_cols = [c for c in Y_hat.columns if 'date' in c.lower() or c == 'timestamp']
+                if possible_date_cols:
+                    Y_hat = Y_hat.rename(columns={possible_date_cols[0]: 'ds'})
                 else:
-                    raise ValueError("No se pudo encontrar 'ds' en las predicciones")
+                    raise ValueError(f"No se pudo encontrar 'ds' en las predicciones. Columnas: {list(Y_hat.columns)}")
             
             # Asegurar que ds sea datetime
             if not pd.api.types.is_datetime64_any_dtype(Y_hat['ds']):
-                Y_hat['ds'] = pd.to_datetime(Y_hat['ds'])
+                Y_hat['ds'] = pd.to_datetime(Y_hat['ds'], errors='coerce')
             
-            # Reemplazar valores infinitos y NaN con 0
-            numeric_cols = Y_hat.select_dtypes(include=[np.number]).columns
-            for col in numeric_cols:
-                if col not in ['unique_id', 'ds']:
-                    Y_hat[col] = Y_hat[col].replace([np.inf, -np.inf], np.nan)
-                    Y_hat[col] = Y_hat[col].fillna(0)
-                    Y_hat[col] = Y_hat[col].clip(lower=0)  # Asegurar no negativos
+            # Asegurar que unique_id sea string
+            Y_hat['unique_id'] = Y_hat['unique_id'].astype(str)
             
-            logger.info(f"Predicciones generadas: {len(Y_hat)} filas, columnas: {list(Y_hat.columns)}")
+            # Reemplazar valores infinitos y NaN con 0 en columnas de modelos
+            model_cols = [c for c in Y_hat.columns if c not in ['unique_id', 'ds']]
+            for col in model_cols:
+                Y_hat[col] = Y_hat[col].replace([np.inf, -np.inf], np.nan)
+                Y_hat[col] = Y_hat[col].fillna(0)
+                Y_hat[col] = Y_hat[col].clip(lower=0)  # Asegurar no negativos
+            
+            logger.info(f"Predicciones generadas: {len(Y_hat)} filas, {len(model_cols)} modelos")
+            logger.info(f"Columnas finales: {list(Y_hat.columns)}")
             return Y_hat
             
         except Exception as e:

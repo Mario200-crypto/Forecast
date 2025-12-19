@@ -79,7 +79,24 @@ class ApiService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ series_id: seriesId }),
     });
-    if (!response.ok) throw new Error('Error al generar predicciones');
+    
+    if (!response.ok) {
+      // Intentar extraer el mensaje de error del backend
+      let errorMessage = 'Error al generar predicciones';
+      try {
+        const errorData = await response.json();
+        if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        // Si no se puede parsear el JSON, usar el status text
+        errorMessage = response.statusText || 'Error al generar predicciones';
+      }
+      throw new Error(errorMessage);
+    }
+    
     return response.json();
   }
 }
