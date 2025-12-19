@@ -330,7 +330,7 @@ class ForecastService:
             
             # 4. Predecir para validación
             logger.info("Paso 4/7: Generando predicciones de validación...")
-            Y_hat = self.predict(h=self.conf['test_weeks'])
+            Y_hat = self.predict(horizon=self.conf['test_weeks'])
             
             # 5. Calcular métricas
             logger.info("Paso 5/7: Calculando métricas...")
@@ -343,7 +343,7 @@ class ForecastService:
             ).reset_index(drop=True)
             
             self.sf.fit(df=Y_full_clean)
-            Y_future = self.predict(h=self.conf['horizon'])
+            Y_future = self.predict(horizon=self.conf['horizon'])
             
             # 7. Preparar datos para visualización
             logger.info("Paso 7/7: Preparando datos para visualización...")
