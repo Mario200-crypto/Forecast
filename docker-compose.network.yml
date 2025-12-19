@@ -1,5 +1,9 @@
 version: '3.8'
 
+# Configuración para acceso desde red local
+# Usa tu IP local en lugar de localhost
+# Para encontrar tu IP: ipconfig (Windows) o ifconfig (Linux/Mac)
+
 services:
   backend:
     build: ./backend
@@ -10,7 +14,9 @@ services:
       - ./data:/app/data
     environment:
       - PYTHONUNBUFFERED=1
+      - CORS_ORIGINS=*
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    network_mode: "host"  # Permite acceso desde red local
 
   frontend:
     build: ./frontend
@@ -20,11 +26,11 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      # Para acceso local: http://localhost:8000
-      # Para acceso desde red: cambia a tu IP (ej: http://192.168.1.100:8000)
-      # Para acceso público: usa la URL pública del backend
-      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://localhost:8000}
+      # IMPORTANTE: Reemplaza TU_IP_AQUI con tu IP local
+      # Ejemplo: REACT_APP_API_URL=http://192.168.1.100:8000
+      - REACT_APP_API_URL=http://TU_IP_AQUI:8000
       - CHOKIDAR_USEPOLLING=true
     depends_on:
       - backend
+    network_mode: "host"
 

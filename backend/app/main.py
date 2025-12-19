@@ -11,11 +11,19 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Configurar CORS
+# Configurar CORS - Permitir desde cualquier origen para acceso desde red local
+import os
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+if cors_origins == ["*"]:
+    # En desarrollo, permitir todos los orígenes para acceso desde red local
+    allow_origins = ["*"]
+else:
+    allow_origins = cors_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-    allow_credentials=True,
+    allow_origins=allow_origins if allow_origins != ["*"] else ["*"],
+    allow_credentials=True if allow_origins != ["*"] else False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
