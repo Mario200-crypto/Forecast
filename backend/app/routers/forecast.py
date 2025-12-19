@@ -77,22 +77,31 @@ async def generate_forecast(request: ForecastRequest = None):
     
     Si series_id es None, procesa todas las series disponibles
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info("Solicitud de predicción recibida")
         result = forecast_service.generate_full_forecast()
         
         # Si se especifica una serie, filtrar resultados
         if request and request.series_id:
             series_id = request.series_id
-            result['train'] = [r for r in result['train'] if r['unique_id'] == series_id]
-            result['test_real'] = [r for r in result['test_real'] if r['unique_id'] == series_id]
-            result['predictions'] = [r for r in result['predictions'] if r['unique_id'] == series_id]
-            result['future'] = [r for r in result['future'] if r['unique_id'] == series_id]
-            result['metrics'] = [m for m in result['metrics'] if m['series_id'] == series_id]
+            logger.info(f"Filtrando resultados para serie: {series_id}")
+            result['train'] = [r for r in result['train'] if str(r.get('unique_id')) == str(series_id)]
+            result['test_real'] = [r for r in result['test_real'] if str(r.get('unique_id')) == str(series_id)]
+            result['predictions'] = [r for r in result['predictions'] if str(r.get('unique_id')) == str(series_id)]
+            result['future'] = [r for r in result['future'] if str(r.get('unique_id')) == str(series_id)]
+            result['metrics'] = [m for m in result['metrics'] if str(m.get('series_id')) == str(series_id)]
         
+        logger.info("Predicción completada exitosamente")
         return result
+        
     except ValueError as e:
+        logger.error(f"Error de validación: {str(e)}", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error al generar predicciones: {str(e)}")
 
 
@@ -102,4 +111,5 @@ async def get_metrics():
     # Esto requeriría almacenar las métricas en el servicio
     # Por ahora, necesitarías generar el forecast primero
     return {"message": "Genera predicciones primero usando /api/forecast/predict"}
+
 
