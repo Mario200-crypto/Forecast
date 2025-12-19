@@ -98,11 +98,21 @@ async def generate_forecast(request: ForecastRequest = None):
         return result
         
     except ValueError as e:
-        logger.error(f"Error de validación: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=400, detail=str(e))
+        error_msg = str(e)
+        import traceback
+        error_trace = traceback.format_exc()
+        logger.error(f"Error de validación: {error_msg}\n{error_trace}")
+        raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
-        logger.error(f"Error inesperado: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error al generar predicciones: {str(e)}")
+        error_msg = str(e)
+        import traceback
+        error_trace = traceback.format_exc()
+        # Imprimir directamente para asegurar que se vea en logs de Docker
+        print(f"ERROR EN /api/forecast/predict: {error_msg}")
+        print(f"TRACEBACK:\n{error_trace}")
+        logger.error(f"Error inesperado: {error_msg}\n{error_trace}")
+        # Incluir el mensaje completo en el detalle
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 @router.get("/metrics")
@@ -111,4 +121,17 @@ async def get_metrics():
     # Esto requeriría almacenar las métricas en el servicio
     # Por ahora, necesitarías generar el forecast primero
     return {"message": "Genera predicciones primero usando /api/forecast/predict"}
+
+
+@router.get("/debug/status")
+async def debug_status():
+    """Endpoint de debug para verificar el estado del servicio"""
+    status = {
+        "data_loaded": forecast_service.Y_df is not None,
+        "data_count": len(forecast_service.Y_df) if forecast_service.Y_df is not None else 0,
+        "series_count": forecast_service.Y_df['unique_id'].nunique() if forecast_service.Y_df is not None else 0,
+        "models_trained": forecast_service.sf is not None,
+        "config": forecast_service.get_config()
+    }
+    return status
 

@@ -13,9 +13,9 @@ from statsforecast.models import (
     Holt, 
     AutoETS,
     WindowAverage,
-    RandomWalkWithDrift,
     AutoARIMA
 )
+# RandomWalkWithDrift se importa dinámicamente en train_models() por compatibilidad
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -151,13 +151,29 @@ class ForecastService:
             
             ventanas_a_probar = [2, 3, 4, 6, 8]
             
+            # Intentar importar RandomWalkWithDrift, si falla usar RWD
+            try:
+                from statsforecast.models import RandomWalkWithDrift
+                rwd_model = RandomWalkWithDrift()
+            except ImportError:
+                try:
+                    from statsforecast.models import RWD
+                    rwd_model = RWD()
+                except ImportError:
+                    logger.warning("No se pudo importar RandomWalkWithDrift/RWD, omitiendo este modelo")
+                    rwd_model = None
+            
             models = [
                 Naive(),
                 AutoETS(model='ZZN', season_length=1, alias='Auto_Smoothing'),
                 *[WindowAverage(window_size=w, alias=f"MovAvg_{w}") for w in ventanas_a_probar],
-                RandomWalkWithDrift(),
-                AutoARIMA()
             ]
+            
+            # Agregar RWD si está disponible
+            if rwd_model is not None:
+                models.append(rwd_model)
+            
+            models.append(AutoARIMA())
             
             logger.info(f"Configurando StatsForecast con {len(models)} modelos")
             self.sf = StatsForecast(
@@ -345,8 +361,14 @@ class ForecastService:
             return result
             
         except Exception as e:
-            logger.error(f"Error en generate_full_forecast: {str(e)}", exc_info=True)
-            raise ValueError(f"Error al generar forecast: {str(e)}")
+            import traceback
+            error_msg = str(e)
+            error_trace = traceback.format_exc()
+            # Imprimir directamente para logs de Docker
+            print(f"ERROR EN generate_full_forecast: {error_msg}")
+            print(f"TRACEBACK:\n{error_trace}")
+            logger.error(f"Error en generate_full_forecast: {error_msg}\n{error_trace}")
+            raise ValueError(f"Error al generar forecast: {error_msg}")
     
     def calculate_metrics(self, Y_test_real: pd.DataFrame, Y_hat: pd.DataFrame) -> List[Dict]:
         """
