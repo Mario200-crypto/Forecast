@@ -2,7 +2,7 @@
 
 ## ¿Qué Hicimos?
 
-Generamos un código de forecasting  y posteriormente lo covnertimos en un **sistema web completo** con interfaz gráfica para tunear parámetros y visualizar predicciones.
+Generamos un código de forecasting  y posteriormente lo convertimos en un **sistema web completo** con interfaz gráfica para tunear parámetros y visualizar predicciones.
 ---
 
 ## Arquitectura 
