@@ -15,6 +15,7 @@ Frontend (React) ←→ Backend (FastAPI) ←→ StatsForecast (ML)
 - **Frontend**: Interfaz gráfica (React + Recharts)
 - **Backend**: API que procesa datos y genera predicciones (FastAPI)
 - **Motor ML**: Entrena modelos y genera predicciones (StatsForecast)
+- **Deployment**: Docker + Docker Compose
 
 ---
 
@@ -51,27 +52,6 @@ Frontend (React) ←→ Backend (FastAPI) ←→ StatsForecast (ML)
 5. AutoARIMA
 
 **Todos se comparan automáticamente** para encontrar el mejor.
-
----
-
-## Tecnologías
-
-- **Backend**: FastAPI (Python)
-- **Frontend**: React + Recharts
-- **ML**: StatsForecast (Nixtla)
-- **Deployment**: Docker + Docker Compose
-
----
-
-## Valor Agregado
-
-| Antes (Notebook) | Ahora (Sistema) |
-|------------------|-----------------|
-| Editar código | Interfaz gráfica |
-| Gráficas estáticas | Gráficas interactivas |
-| Comparación manual | Métricas automáticas |
-| Requiere Python | Cualquiera puede usar |
-
 ---
 
 ## Cómo Correr
@@ -94,6 +74,16 @@ docker-compose up --build -d
 - **API Docs**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
 
+## Valor Agregado
+
+| Antes (Notebook) | Ahora (Sistema) |
+|------------------|-----------------|
+| Editar código | Interfaz gráfica |
+| Gráficas estáticas | Gráficas interactivas |
+| Comparación manual | Métricas automáticas |
+| Requiere Python | Cualquiera puede usar |
+
+---
 
 ##  Estructura del Código
 
