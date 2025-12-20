@@ -5,6 +5,8 @@
 Generamos un código de forecasting  y posteriormente lo convertimos en un **sistema web completo** con interfaz gráfica para tunear parámetros y visualizar predicciones.
 ---
 
+
+
 ## Arquitectura 
 ```
 Frontend (React) ←→ Backend (FastAPI) ←→ StatsForecast (ML)
@@ -19,6 +21,8 @@ Frontend (React) ←→ Backend (FastAPI) ←→ StatsForecast (ML)
 
 ---
 
+
+
 ## Funcionalidades 
 
 1. ✅ **Tunear parámetros visualmente** - Panel con controles para cada parámetro
@@ -28,6 +32,8 @@ Frontend (React) ←→ Backend (FastAPI) ←→ StatsForecast (ML)
 5. ✅ **Comparar métricas** - Tabla con Accuracy y MAE por modelo
 
 ---
+
+
 
 ## Flujo Completo 
 
@@ -43,6 +49,8 @@ Frontend (React) ←→ Backend (FastAPI) ←→ StatsForecast (ML)
 
 ---
 
+
+
 ## Modelos Implementados
 
 1. Naive
@@ -53,6 +61,8 @@ Frontend (React) ←→ Backend (FastAPI) ←→ StatsForecast (ML)
 
 **Todos se comparan automáticamente** para encontrar el mejor.
 ---
+
+
 
 ## Cómo Correr
 
@@ -74,6 +84,8 @@ docker-compose up --build -d
 - **API Docs**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
 
+
+
 ## Valor Agregado
 
 | Antes (Notebook) | Ahora (Sistema) |
@@ -84,6 +96,8 @@ docker-compose up --build -d
 | Requiere Python | Cualquiera puede usar |
 
 ---
+
+
 
 ##  Estructura del Código
 
@@ -108,6 +122,7 @@ frontend/
 ```
 
 ---
+
 
 ## Conceptos Clave
 
